@@ -1,4 +1,5 @@
-from flask import Flask
+from flask import Flask, request
+import json
 
 app = Flask(__name__)
 
@@ -41,8 +42,8 @@ def students():
 @app.get("/greet/<name>")
 def greet(name):
     print("Greet endpoint accessed")
-    # return "Hello " + name
-    return f"Hello {name}"
+    return "Hello " + name
+    # return f"Hello {name}"
 
 
 @app.get("/contact")
@@ -50,7 +51,57 @@ def contact_api():
     print("Contact API endpoint accessed")
     user_name = "Pam"
     age = 25
-    return render_template("contact.html", name=user_name, age=age)
+    return "contact"
+
+
+
+products =[]
+@app.get("/api/products")
+def get_products():
+    return json.dumps(products)
+
+# post
+@app.post("/api/products")
+def post_products():
+    item = request.get_json()
+    print(item)
+    products.append(item)
+    return json.dumps(item)
+
+
+# put
+@app.put("/api/products/<int:index>")
+def put_products(index):
+    updated_item = request.get_json()
+    if len(products) > index >= 0:
+        products[index]= updated_item
+        return json.dumps(updated_item)
+    else:
+        return "that index does not exist"
+
+
+# Try to use the delete method
+# delete
+@app.delete("/api/products/<int:index>")
+def delete_product(index):
+    deleted_item = request.get_json()
+    if 0<= index < len(products):
+        deleted_item = products.pop(index)
+        return json.dumps(deleted_item)
+    else:
+        return "That index does not exist"
+
+
+# patch
+@app.patch("/api/products/<int:index>")
+def patch_product(index):
+    patch_item = request.get_json()
+    if 0<= index < len(products):
+        products(index).index(patch_item)
+        return json.dumps(patch_item)
+    else:
+        return "That index does not exist"
+    
 
 
 # @app.post
