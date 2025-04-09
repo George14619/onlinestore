@@ -1,5 +1,7 @@
 from flask import Flask, request
 import json
+from config import db
+
 
 app = Flask(__name__)
 
@@ -55,18 +57,27 @@ def contact_api():
 
 
 
-products =[]
+products = []
 @app.get("/api/products")
 def get_products():
+    cursor = db.products.find({})
+    for prod in cursor:
+        products.append(fix_id(prod))
     return json.dumps(products)
+
+def fix_id(obj):
+    obj["_id"] = str(obj["_id"])
+    return obj
 
 # post
 @app.post("/api/products")
 def post_products():
     item = request.get_json()
     print(item)
-    products.append(item)
-    return json.dumps(item)
+    
+    db.products.insert_one(item)
+    print(item)
+    return json.dumps(fix_id(item))
 
 
 # put
