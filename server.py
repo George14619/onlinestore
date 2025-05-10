@@ -1,9 +1,11 @@
 from flask import Flask, request
 import json
 from config import db
+from flask_cors import CORS
 
 
 app = Flask(__name__)
+CORS(app) # warning: this disables CORS policy
 
 
 @app.route("/")
@@ -26,6 +28,9 @@ def home():
 def get_users():
     return {"users": ["Alice", "Bob", "Charlie"]}
 
+################################################################################
+##########################       API         ###################################
+################################################################################
 
 @app.get("/api/about")
 def about():
@@ -60,6 +65,7 @@ def contact_api():
 products = []
 @app.get("/api/products")
 def get_products():
+    products = []
     cursor = db.products.find({})
     for prod in cursor:
         products.append(fix_id(prod))
@@ -68,6 +74,30 @@ def get_products():
 def fix_id(obj):
     obj["_id"] = str(obj["_id"])
     return obj
+
+
+@app.get("/api/categories")
+def get_categories():
+    categories = []
+    cursor = db.products.find({})
+    for prod in cursor:
+        cat = prod["category"]
+        if cat not in categories:
+            categories.append(cat)
+        
+
+
+    return json.dumps(categories)
+
+
+@app.get("/api/reports/total")
+def get_total():
+    total = 0
+    cursor = db.products.find({})
+    for prod in cursor:
+        total += prod["price"]
+
+    return json.dumps(total)   
 
 # post
 @app.post("/api/products")
@@ -119,5 +149,27 @@ def patch_product(index):
 # @app.put
 # @app.delete
 # @app.patch
+
+#####################################
+########### API COUPONS #############
+#####################################
+
+
+@app.post("/api/coupons")
+def save_coupon():
+    coupon = request.get_json()
+
+    db.coupons.insert_one(coupon)
+    return json.dumps(fix_id(coupon))
+
+@app.get("/api/coupons")
+def get_coupons():
+    results = []
+    cursor = db.coupons.find({})
+    for cp in cursor:
+        results.append(fix_id(cp))
+
+    return json.dumps(results)    
+
 
 app.run(debug=True, port=8000)
